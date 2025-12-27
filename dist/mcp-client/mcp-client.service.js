@@ -18,17 +18,18 @@ let McpClientService = McpClientService_1 = class McpClientService {
     constructor(config) {
         this.config = config;
         this.logger = new common_1.Logger(McpClientService_1.name);
-        this.mcpClientUrl = this.config.get('MCP_CLIENT_URL') || 'http://localhost:4001';
+        this.mcpClientUrl = this.config.get('MCP_CLIENT_URL');
     }
     async forwardToMcp(payload) {
         try {
-            const url = `${this.mcpClientUrl}/mcp-client/forward`;
+            const url = this.mcpClientUrl;
+            this.logger.log(`Attempting to call MCP Client at: ${url}`);
             const resp = await axios_1.default.post(url, payload, { timeout: 15000 });
             return resp.data;
         }
         catch (err) {
-            this.logger.error('Failed to forward to MCP client', err);
-            return { answer: `Mock reply to: ${payload.message}` };
+            this.logger.error(`Failed to forward to MCP client at ${this.mcpClientUrl}`, err.message);
+            return { answer: `Mock reply to: ${payload.message || payload.prompt}` };
         }
     }
 };

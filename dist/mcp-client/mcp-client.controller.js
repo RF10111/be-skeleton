@@ -20,7 +20,7 @@ let McpClientController = class McpClientController {
         this.mcpClient = mcpClient;
     }
     async forward(body) {
-        const target = body._targetUrl || 'http://localhost:4002/mcp-server/process';
+        const target = body._targetUrl || 'http://localhost:3002/mcp-server/process';
         try {
             const axios = require('axios');
             const resp = await axios.post(target, body);

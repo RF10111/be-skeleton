@@ -1,9 +1,15 @@
 import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 class PromptDto {
+  @IsOptional()
+  @IsString()
   conversationId?: string;
+
+  @IsNotEmpty() // Wajib isi
+  @IsString()   // Harus berupa string
   prompt: string;
 }
 

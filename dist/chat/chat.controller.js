@@ -16,8 +16,19 @@ exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const chat_service_1 = require("./chat.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const class_validator_1 = require("class-validator");
 class PromptDto {
 }
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], PromptDto.prototype, "conversationId", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], PromptDto.prototype, "prompt", void 0);
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;

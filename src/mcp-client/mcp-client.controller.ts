@@ -10,7 +10,7 @@ export class McpClientController {
     // In production this controller would forward to a separate MCP server endpoint
     // Here we forward to a configured MCP server (e.g., remote) or, if running locally,
     // our local MCP server at /mcp-server/process
-    const target = (body._targetUrl as string) || 'http://localhost:4002/mcp-server/process';
+    const target = (body._targetUrl as string) || 'http://localhost:3002/mcp-server/process';
     // If the configured MCP client url points to this app itself, call the local server
     // For simplicity, just simulate a forward by making an HTTP call
     try {
