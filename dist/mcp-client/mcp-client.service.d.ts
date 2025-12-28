@@ -4,5 +4,11 @@ export declare class McpClientService {
     private readonly logger;
     private mcpClientUrl;
     constructor(config: ConfigService);
-    forwardToMcp(payload: any): Promise<any>;
+    forwardToMcp(payload: any): Promise<{
+        answer: any;
+        raw: any;
+    } | {
+        answer: string;
+        raw?: undefined;
+    }>;
 }

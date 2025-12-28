@@ -41,7 +41,19 @@ let ChatController = class ChatController {
             conversationId = conv.id;
         }
         const result = await this.chatService.sendPrompt(user.id, conversationId, body.prompt);
-        return { conversationId, result };
+        return {
+            conversationId,
+            user: { id: user.id, content: body.prompt },
+            assistant: result.assistant,
+        };
+    }
+    async getConversation(req, conversationId, userId) {
+        if (req.user?.id !== userId)
+            return { error: 'unauthorized' };
+        const messages = await this.chatService.getConversation(conversationId, userId);
+        if (!messages)
+            return { error: 'conversation_not_found_or_not_owned' };
+        return { conversationId, userId, messages };
     }
 };
 exports.ChatController = ChatController;
@@ -54,6 +66,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, PromptDto]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "prompt", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(':conversationId/:userId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('conversationId')),
+    __param(2, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "getConversation", null);
 exports.ChatController = ChatController = __decorate([
     (0, common_1.Controller)('chat'),
     __metadata("design:paramtypes", [chat_service_1.ChatService])

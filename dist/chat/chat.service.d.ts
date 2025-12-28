@@ -21,12 +21,17 @@ export declare class ChatService {
     sendPrompt(userId: string, conversationId: string, prompt: string): Promise<{
         user: {
             id: string;
-            createdAt: Date;
-            role: string;
             content: string;
-            metadata: import("@prisma/client/runtime/library").JsonValue | null;
-            conversationId: string;
+            createdAt: Date;
         };
-        assistant: any;
+        assistant: {
+            answer: string;
+            createdAt: Date;
+        };
     }>;
+    getConversation(conversationId: string, userId: string): Promise<{
+        createdAt: Date;
+        role: string;
+        content: string;
+    }[]>;
 }
