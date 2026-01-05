@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -16,7 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
-    if (!user) return null;
+    if (!user) throw new UnauthorizedException();
+    // verify remember token matches payload; this makes access token invalid after logout
+    if (!payload.rt || user.rememberToken !== payload.rt) {
+      throw new UnauthorizedException('Token revoked or invalid');
+    }
     const { password, ...rest } = user as any;
     return rest;
   }

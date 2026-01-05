@@ -4,15 +4,6 @@ export declare class McpServerController {
     private readonly logger;
     constructor(prisma: PrismaService);
     process(body: any): Promise<{
-        ok: boolean;
-        reason: string;
-        assistant?: undefined;
-    } | {
-        ok: boolean;
-        assistant: {
-            answer: string;
-            createdAt: Date;
-        };
-        reason?: undefined;
+        answer: string;
     }>;
 }

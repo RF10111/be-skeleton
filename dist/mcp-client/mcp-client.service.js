@@ -26,7 +26,12 @@ let McpClientService = McpClientService_1 = class McpClientService {
             this.logger.log(`Attempting to call MCP Client at: ${url}`);
             const resp = await axios_1.default.post(url, payload, { timeout: 15000 });
             const data = resp.data || {};
-            const answer = data.answer || data.reply || data.content || (typeof data === 'string' ? data : undefined);
+            const answer = data.answer ||
+                data.reply ||
+                data.content ||
+                data.result?.content ||
+                data.data?.result?.content ||
+                (typeof data === 'string' ? data : undefined);
             return { answer, raw: data };
         }
         catch (err) {

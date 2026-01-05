@@ -28,9 +28,14 @@ export class ChatService {
       message: prompt,
     });
 
-    // save assistant message
-    await this.addMessage(conversationId, 'assistant', mcpResponse.answer || '');
+    // determine assistant content (support nested shapes)
+    const assistantContent =
+      mcpResponse?.answer ?? mcpResponse?.raw?.result?.content ?? mcpResponse?.raw?.data?.result?.content ?? '';
 
-    return { user: userMsg, assistant: mcpResponse };
+    // save assistant message; do NOT include metadata (store as null)
+    const assistantMsg = await this.addMessage(conversationId, 'assistant', assistantContent);
+
+    // return user and saved assistant message (contains id, createdAt, role, content, conversationId)
+    return { user: userMsg, assistant: assistantMsg };
   }
 }

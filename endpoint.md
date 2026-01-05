@@ -89,10 +89,23 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
+### POST /auth/logout
+- Deskripsi: Logout user — server menambahkan token JWT ke blacklist (in-memory). Token yang diblacklist tidak lagi dianggap valid sampai server restart (simple implementation).
+- Headers: `Authorization: Bearer <TOKEN>`
+- Body: kosong
+- Success (200):
+```json
+{ "status": "ok" }
+```
+
+Note: For production, use persistent store (Redis) for blacklist.
+
+---
+
 ## 2) Chat
 
-### POST /chat/prompt
-- Deskripsi: Endpoint utama: menyimpan prompt user, meneruskan ke MCP client, menyimpan jawaban assistant, dan mengembalikan hasil.
+### POST /chat (atau POST /chat/:conversationId)
+- Deskripsi: Endpoint utama untuk user-facing chat API. Menyimpan prompt user, meneruskan ke MCP client, menyimpan jawaban assistant, dan mengembalikan hasil yang disederhanakan.
 - Auth: Required
 - Headers: `Authorization: Bearer <TOKEN>`
 - Body:
@@ -102,41 +115,66 @@ Authorization: Bearer <JWT_TOKEN>
   "prompt": "Halo, tolong jelaskan arsitektur microservices?"
 }
 ```
-- Flow internal:
-  1. Jika `conversationId` tidak disediakan, BE membuat `Conversation` baru untuk user.
-  2. BE menyimpan message role=`user` ke tabel `Message`.
-  3. BE memanggil MCP client (`MCP_CLIENT_URL` konfigurasi) dengan payload berisi `userId`, `conversationId`, `message`.
-  4. MCP client meneruskan ke MCP server yang memanggil LLM (di mock sekarang).
-  5. BE menyimpan jawaban assistant ke tabel `Message`.
-- Success (200) contoh response:
+- Behavior:
+  1. Jika `:conversationId` path param ada, server akan menggunakannya.
+  2. Jika tidak ada conversationId, server akan membuat `Conversation` baru untuk user (menggunakan `user.id` dari JWT).
+  3. Server menyimpan message role=`user` di DB.
+  4. Server memanggil MCP client dengan payload `{ userId, conversationId, message }`.
+  5. Setelah menerima jawaban, server menyimpan message role=`assistant`.
+
+- Success (200) contoh response (sederhana):
 ```json
 {
+  "status_code": 200,
   "conversationId": "cj_conv_123",
-  "result": {
-    "user": {
-      "id": "cj_msg_user_1",
-      "conversationId": "cj_conv_123",
-      "role": "user",
-      "content": "Halo, tolong jelaskan arsitektur microservices?",
-      "createdAt": "2025-12-23T..."
-    },
-    "assistant": {
-      "answer": "LLM reply (simulated) to: Halo, tolong jelaskan arsitektur microservices?"
-    }
-  }
+  "user": { "id": "cj_user_1", "content": "Halo, tolong jelaskan..." },
+  "assistant": { "answer": "LLM reply (simulated) to: Halo, tolong jelaskan...", "createdAt": "2025-12-23T...", "status_code": 200 }
 }
 ```
-- Errors: 400 jika `prompt` kosong, 401 jika token invalid.
 
-Notes: `result.assistant.answer` berasal dari MCP server (LLM). Full assistant message is also persisted in DB as `Message`.
+- Errors: 400 jika `prompt` kosong, 401 jika token invalid, 403 jika user tidak berhak pada conversation.
+
+Notes: Response disederhanakan — tidak ada nested `raw` fields. Semua pesan tetap dipersist di tabel `Message`.
 
 ---
 
-## 3) MCP Client (internal forwarding endpoint)
+### GET /chat/:conversationId
+- Deskripsi: Ambil riwayat pesan untuk `conversationId`. `userId` diambil dari JWT (hanya owner yang dapat mengakses).
+- Auth: Required
+- Headers: `Authorization: Bearer <TOKEN>`
+- Success (200) contoh response:
+```json
+{
+  "status_code": 200,
+  "conversationId": "cj_conv_123",
+  "userId": "cj_user_1",
+  "messages": [
+    { "role": "user", "content": "Halo", "createdAt": "..." },
+    { "role": "assistant", "content": "...", "createdAt": "..." }
+  ]
+}
+```
+
+---
+
+### GET /chat
+- Deskripsi: List conversations milik user (history). `userId` diambil dari JWT.
+- Auth: Required
+- Headers: `Authorization: Bearer <TOKEN>`
+- Success (200) contoh response:
+```json
+{
+  "status_code": 200,
+  "conversations": [ { "id": "cj_conv_123", "title": "Conversation", "createdAt": "..." }, ... ]
+}
+```
+
+---
+
+## 3) MCP Client (internal forwarding)
 
 ### POST /mcp-client/forward
-- Deskripsi: Endpoint yang menerima forward dari BE atau FE (tergantung arsitektur tim AI). MCP client akan meneruskan payload ke MCP server.
-- Headers: optional
+- Deskripsi: Service yang meneruskan payload ke MCP server (external/mock). Biasanya dipanggil oleh `ChatService`.
 - Body contoh:
 ```json
 {
@@ -146,29 +184,31 @@ Notes: `result.assistant.answer` berasal dari MCP server (LLM). Full assistant m
   "_targetUrl": "http://localhost:4002/mcp-server/process" // optional override
 }
 ```
-- Behavior:
-  - Jika `_targetUrl` disertakan, MCP client akan memanggil URL tersebut.
-  - Jika tidak, MCP client memanggil konfigurasi default yang dipakai di service.
 - Response contoh (200):
 ```json
-{ "answer": "mcp-client mock -> User prompt text" }
+{ "answer": "mcp-client mock -> User prompt text", "raw": { ... }, "status_code": 200 }
 ```
-- Error: 502/504 jika forward gagal; service menyediakan fallback mock (lihat kode).
 
 ---
 
-## 4) MCP Server (mock LLM)
+## 4) MCP Server (webhook / mock LLM receiver)
 
 ### POST /mcp-server/process
-- Deskripsi: Simulasi MCP server yang memanggil LLM. Mengembalikan jawaban tekstual.
-- Body contoh:
+- Deskripsi: Endpoint yang dipanggil oleh MCP client / external system yang mengembalikan jawaban assistant. Server menyimpan assistant message ketika `conversationId` tersedia.
+- Body contoh (dari MCP client / external):
 ```json
-{ "userId": "cj...", "conversationId": "cj_conv_123", "message": "User prompt text" }
+{
+  "conversationId": "cj_conv_123",
+  "answer": "🐍 [Python API] Data Mesin Siemens: Status OPTIMAL | Suhu: 48°C | Speed: 1200rpm",
+  "metadata": { "source": "external-llm" }
+}
 ```
-- Success (200):
+- Behavior: Jika `conversationId` dan `answer` ada, server akan menyimpan message role=`assistant` ke DB.
+- Success (200) contoh response:
 ```json
-{ "answer": "LLM reply (simulated) to: User prompt text" }
+{ "status_code": 200, "ok": true, "assistant": { "answer": "...", "createdAt": "..." } }
 ```
+- Error behavior: jika payload tidak lengkap, server mengembalikan `{ status_code: 400, ok: false, reason: 'missing_conversationId_or_content' }`.
 
 ---
 
@@ -184,7 +224,7 @@ prisma.message.findMany({ where: { conversationId }, orderBy: { createdAt: 'asc'
 
 ## Contoh end-to-end request (client)
 1) Login -> dapat token
-2) POST /chat/prompt
+2) POST /chat (authenticated)
 Headers:
 ```
 Authorization: Bearer <ACCESS_TOKEN>
@@ -198,7 +238,8 @@ Response:
 ```json
 {
   "conversationId": "cj_conv_abc",
-  "result": { "user": {...}, "assistant": { "answer": "LLM reply (simulated) to: Tuliskan ringkasan arsitektur hexagonal" } }
+  "user": { "id": "cj_user_1", "content": "Tuliskan ringkasan arsitektur hexagonal" },
+  "assistant": { "answer": "LLM reply (simulated) to: Tuliskan ringkasan arsitektur hexagonal" }
 }
 ```
 
@@ -206,11 +247,8 @@ Response:
 
 ## Catatan tambahan untuk developer
 - Pastikan environment variable `MCP_CLIENT_URL` diisi jika MCP client berjalan di host berbeda.
-- Untuk integrasi LLM asli, ganti implementasi di `/mcp-server/process` agar memanggil LLM provider (OpenAI, Anthropic, internal API) dan kembalikan struktur:
-```json
-{ "answer": "...full text...", "metadata": { "model": "gpt-x", "usage": {...} } }
-```
-- Untuk pagination / read endpoints (history), tambahkan GET endpoints:
+- Untuk integrasi LLM asli, ganti implementasi di MCP client/server agar memanggil provider LLM dan kembalikan struktur lengkap (answer + metadata).
+- Untuk pagination / read endpoints (history), pertimbangkan menambah:
   - `GET /conversations` — list conversations untuk user
   - `GET /conversations/:id/messages` — list messages for conversation
 

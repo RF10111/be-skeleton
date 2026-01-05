@@ -3,34 +3,53 @@ declare class PromptDto {
     conversationId?: string;
     prompt: string;
 }
+declare class PromptBodyDto {
+    prompt: string;
+}
 export declare class ChatController {
     private chatService;
     constructor(chatService: ChatService);
     prompt(req: any, body: PromptDto): Promise<{
-        conversationId: string;
-        user: {
-            id: any;
-            content: string;
-        };
-        assistant: {
-            answer: string;
-            createdAt: Date;
+        statusCode: number;
+        result: {
+            user: {
+                id: string;
+                role: string;
+                content: string;
+                metadata: import("@prisma/client/runtime/library").JsonValue | null;
+                createdAt: Date;
+                conversationId: string;
+            };
+            assistant: {
+                id: string;
+                role: string;
+                content: string;
+                metadata: import("@prisma/client/runtime/library").JsonValue | null;
+                createdAt: Date;
+                conversationId: string;
+            };
         };
     }>;
-    getConversation(req: any, conversationId: string, userId: string): Promise<{
-        error: string;
-        conversationId?: undefined;
-        userId?: undefined;
-        messages?: undefined;
-    } | {
-        conversationId: string;
-        userId: string;
-        messages: {
-            role: string;
-            content: string;
-            createdAt: Date;
-        }[];
-        error?: undefined;
+    promptWithId(req: any, conversationId: string, body: PromptBodyDto): Promise<{
+        statusCode: number;
+        result: {
+            user: {
+                id: string;
+                role: string;
+                content: string;
+                metadata: import("@prisma/client/runtime/library").JsonValue | null;
+                createdAt: Date;
+                conversationId: string;
+            };
+            assistant: {
+                id: string;
+                role: string;
+                content: string;
+                metadata: import("@prisma/client/runtime/library").JsonValue | null;
+                createdAt: Date;
+                conversationId: string;
+            };
+        };
     }>;
 }
 export {};

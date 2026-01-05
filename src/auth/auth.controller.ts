@@ -29,4 +29,12 @@ export class AuthController {
   me(@Request() req) {
     return req.user;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  async logout(@Request() req) {
+    const user = req.user;
+    return this.authService.logout(user.id);
+  }
 }

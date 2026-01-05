@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -19,10 +20,16 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { sub: user.id, email: user.email };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    const rememberToken = randomUUID();
+    await this.prisma.user.update({ where: { id: user.id }, data: { rememberToken } });
+    const payload = { sub: user.id, email: user.email, rt: rememberToken };
+    const access_token = this.jwtService.sign(payload);
+    return { access_token, rememberToken };
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({ where: { id: userId }, data: { rememberToken: null } });
+    return { status: 'ok' };
   }
 
   async register(data: { email: string; password: string; name?: string }) {

@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcrypt");
 const prisma_service_1 = require("../prisma/prisma.service");
+const crypto_1 = require("crypto");
 let AuthService = class AuthService {
     constructor(prisma, jwtService) {
         this.prisma = prisma;
@@ -31,10 +32,15 @@ let AuthService = class AuthService {
         return null;
     }
     async login(user) {
-        const payload = { sub: user.id, email: user.email };
-        return {
-            access_token: this.jwtService.sign(payload),
-        };
+        const rememberToken = (0, crypto_1.randomUUID)();
+        await this.prisma.user.update({ where: { id: user.id }, data: { rememberToken } });
+        const payload = { sub: user.id, email: user.email, rt: rememberToken };
+        const access_token = this.jwtService.sign(payload);
+        return { access_token, rememberToken };
+    }
+    async logout(userId) {
+        await this.prisma.user.update({ where: { id: userId }, data: { rememberToken: null } });
+        return { status: 'ok' };
     }
     async register(data) {
         if (!data || !data.email || !data.password) {
