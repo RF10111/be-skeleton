@@ -45,8 +45,3 @@ Notes
 - Update `MCP_CLIENT_URL` to point to your MCP client service in production.
 - Replace the MCP server simulation with your actual LLM integration.
 - The Prisma schema is at `prisma/schema.prisma`.
-
-If you want, I can:
-- Add unit tests or e2e tests
-- Create Dockerfile and docker-compose for Postgres + app
-- Wire up real LLM provider in MCP server
