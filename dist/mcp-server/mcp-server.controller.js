@@ -11,13 +11,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var McpServerController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.McpServerController = void 0;
 const common_1 = require("@nestjs/common");
-let McpServerController = class McpServerController {
+const prisma_service_1 = require("../prisma/prisma.service");
+let McpServerController = McpServerController_1 = class McpServerController {
+    constructor(prisma) {
+        this.prisma = prisma;
+        this.logger = new common_1.Logger(McpServerController_1.name);
+    }
     async process(body) {
         const prompt = body.message || body.prompt || '';
         const answer = `LLM reply (simulated) to: ${prompt}`;
+        try {
+            if (body.conversationId) {
+                await this.prisma.message.create({
+                    data: {
+                        conversationId: body.conversationId,
+                        role: 'assistant',
+                        content: answer,
+                        metadata: body.metadata || null,
+                    },
+                });
+                this.logger.log(`Saved assistant message to conversation ${body.conversationId}`);
+            }
+        }
+        catch (err) {
+            this.logger.error('Failed to save assistant message', err?.message || err);
+        }
         return { answer };
     }
 };
@@ -29,6 +51,7 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], McpServerController.prototype, "process", null);
-exports.McpServerController = McpServerController = __decorate([
-    (0, common_1.Controller)('mcp-server')
+exports.McpServerController = McpServerController = McpServerController_1 = __decorate([
+    (0, common_1.Controller)('mcp-server'),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], McpServerController);
