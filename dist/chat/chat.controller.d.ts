@@ -8,29 +8,23 @@ export declare class ChatController {
     constructor(chatService: ChatService);
     prompt(req: any, body: PromptDto): Promise<{
         conversationId: string;
-        user: {
-            id: any;
-            content: string;
+        result: {
+            user: {
+                id: string;
+                createdAt: Date;
+                role: string;
+                content: string;
+                metadata: import("@prisma/client/runtime/library").JsonValue | null;
+                conversationId: string;
+            };
+            assistant: {
+                answer: any;
+                raw: any;
+            } | {
+                answer: string;
+                raw?: undefined;
+            };
         };
-        assistant: {
-            answer: string;
-            createdAt: Date;
-        };
-    }>;
-    getConversation(req: any, conversationId: string, userId: string): Promise<{
-        error: string;
-        conversationId?: undefined;
-        userId?: undefined;
-        messages?: undefined;
-    } | {
-        conversationId: string;
-        userId: string;
-        messages: {
-            role: string;
-            content: string;
-            createdAt: Date;
-        }[];
-        error?: undefined;
     }>;
 }
 export {};

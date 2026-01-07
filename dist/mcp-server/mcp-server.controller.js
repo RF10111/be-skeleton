@@ -22,28 +22,25 @@ let McpServerController = McpServerController_1 = class McpServerController {
         this.logger = new common_1.Logger(McpServerController_1.name);
     }
     async process(body) {
-        const conversationId = body.conversationId || null;
-        const assistantContent = body.answer || body.reply || body.content || null;
-        if (!conversationId || !assistantContent) {
-            this.logger.warn('MCP webhook missing conversationId or content');
-            return { ok: false, reason: 'missing_conversationId_or_content' };
-        }
+        const prompt = body.message || body.prompt || '';
+        const answer = `LLM reply (simulated) to: ${prompt}`;
         try {
-            const assistantMsg = await this.prisma.message.create({
-                data: {
-                    conversationId,
-                    role: 'assistant',
-                    content: assistantContent,
-                    metadata: body.metadata || null,
-                },
-            });
-            this.logger.log(`Saved assistant message for conversation ${conversationId}`);
-            return { ok: true, assistant: { answer: assistantMsg.content, createdAt: assistantMsg.createdAt } };
+            if (body.conversationId) {
+                await this.prisma.message.create({
+                    data: {
+                        conversationId: body.conversationId,
+                        role: 'assistant',
+                        content: answer,
+                        metadata: body.metadata || null,
+                    },
+                });
+                this.logger.log(`Saved assistant message to conversation ${body.conversationId}`);
+            }
         }
         catch (err) {
             this.logger.error('Failed to save assistant message', err?.message || err);
-            return { ok: false, reason: 'internal_error' };
         }
+        return { answer };
     }
 };
 exports.McpServerController = McpServerController;

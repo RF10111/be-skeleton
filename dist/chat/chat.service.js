@@ -34,18 +34,8 @@ let ChatService = class ChatService {
             conversationId,
             message: prompt,
         });
-        const assistantMsg = await this.addMessage(conversationId, 'assistant', mcpResponse.answer || '', { source: 'mcp-client' });
-        return {
-            user: { id: userMsg.id, content: userMsg.content, createdAt: userMsg.createdAt },
-            assistant: { answer: assistantMsg.content, createdAt: assistantMsg.createdAt },
-        };
-    }
-    async getConversation(conversationId, userId) {
-        const conv = await this.prisma.conversation.findUnique({ where: { id: conversationId }, select: { id: true, userId: true } });
-        if (!conv || conv.userId !== userId)
-            return null;
-        const messages = await this.prisma.message.findMany({ where: { conversationId }, orderBy: { createdAt: 'asc' }, select: { role: true, content: true, createdAt: true } });
-        return messages;
+        await this.addMessage(conversationId, 'assistant', mcpResponse.answer || '');
+        return { user: userMsg, assistant: mcpResponse };
     }
 };
 exports.ChatService = ChatService;

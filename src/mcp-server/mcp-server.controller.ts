@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/database.service';
 
 @Controller('mcp-server')
 export class McpServerController {

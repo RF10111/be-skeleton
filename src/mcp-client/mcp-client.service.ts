@@ -22,7 +22,14 @@ export class McpClientService {
       
       const resp = await axios.post(url, payload, { timeout: 15000 });
       const data = resp.data || {};
-      const answer = data.answer || data.reply || data.content || (typeof data === 'string' ? data : undefined);
+      const answer =
+        data.answer ||
+        data.reply ||
+        data.content ||
+        // some MCP responses nest payload under `result.content`
+        data.result?.content ||
+        data.data?.result?.content ||
+        (typeof data === 'string' ? data : undefined);
       return { answer, raw: data };
     } catch (err) {
       this.logger.error(`Failed to forward to MCP client at ${this.mcpClientUrl}`, err?.message || err);
