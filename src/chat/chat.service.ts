@@ -72,6 +72,7 @@ export class ChatService {
 
     // return user and saved assistant message (contains id, createdAt, role, content, conversationId)
     return { user: userMsg, assistant: assistantMsg };
+<<<<<<< HEAD
   }
 
   async getConversationHistory(userId: string, conversationId: string) {
@@ -203,5 +204,7 @@ export class ChatService {
 
     const deleted = await this.prisma.conversation.delete({ where: { id: conversationId } });
     return deleted;
+=======
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
   }
 }

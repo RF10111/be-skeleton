@@ -1,6 +1,116 @@
 # API Endpoint Documentation
+<<<<<<< HEAD
 ### POST /chat (atau POST /chat/:conversationId)
 - Deskripsi: Simpan prompt user, forward ke MCP client, simpan jawaban assistant.
+=======
+
+Dokumentasi endpoint untuk backend `be-skeleton` (NestJS + Prisma + Postgres).
+Semua contoh menggunakan JSON. Jika endpoint butuh authentication, sertakan header:
+
+Authorization: Bearer <JWT_TOKEN>
+
+---
+
+## Models (ringkasan)
+
+- User
+  - id: string
+  - email: string
+  - name?: string
+  - createdAt: datetime
+
+- Conversation
+  - id: string
+  - userId: string
+  - title?: string
+  - createdAt: datetime
+
+- Message
+  - id: string
+  - conversationId: string
+  - role: string ("user" | "assistant" | "system")
+  - content: string
+  - metadata?: object
+  - createdAt: datetime
+
+---
+
+## 1) Auth
+
+### POST /auth/register
+- Deskripsi: Buat user baru.
+- Headers: none
+- Body (application/json):
+
+```json
+{
+  "email": "alice@example.com",
+  "password": "secret123",
+  "name": "Alice"
+}
+```
+
+- Success Response (201/200):
+```json
+{
+  "id": "cj...",
+  "email": "alice@example.com",
+  "name": "Alice",
+  "createdAt": "2025-12-23T..."
+}
+```
+- Error: 400 jika payload tidak valid, 409 jika email sudah terdaftar.
+
+---
+
+### POST /auth/login
+- Deskripsi: Validasi kredensial dan mengembalikan JWT.
+- Body:
+```json
+{ "email": "alice@example.com", "password": "secret123" }
+```
+- Success Response (200):
+```json
+{ "access_token": "eyJ..." }
+```
+- Error: 401 atau objek error sederhana jika kredensial salah.
+
+---
+
+### POST /auth/me
+- Deskripsi: Ambil data user dari token JWT.
+- Headers: `Authorization: Bearer <TOKEN>`
+- Body: kosong
+- Success (200):
+```json
+{
+  "id":"cj...",
+  "email":"alice@example.com",
+  "name":"Alice",
+  "createdAt":"2025-12-23T..."
+}
+```
+
+---
+
+### POST /auth/logout
+- Deskripsi: Logout user — server menambahkan token JWT ke blacklist (in-memory). Token yang diblacklist tidak lagi dianggap valid sampai server restart (simple implementation).
+- Headers: `Authorization: Bearer <TOKEN>`
+- Body: kosong
+- Success (200):
+```json
+{ "status": "ok" }
+```
+
+Note: For production, use persistent store (Redis) for blacklist.
+
+---
+
+## 2) Chat
+
+### POST /chat (atau POST /chat/:conversationId)
+- Deskripsi: Endpoint utama untuk user-facing chat API. Menyimpan prompt user, meneruskan ke MCP client, menyimpan jawaban assistant, dan mengembalikan hasil yang disederhanakan.
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 - Auth: Required
 - Headers: `Authorization: Bearer <TOKEN>`
 - Body (application/json):
@@ -12,6 +122,7 @@
 ```
 - Behavior:
   1. Jika `:conversationId` path param ada, server akan menggunakannya.
+<<<<<<< HEAD
   2. Jika tidak ada `conversationId`, server membuat `Conversation` baru untuk `user.id` dari JWT.
   3. Server menyimpan message role=`user` di DB.
   4. Server memanggil MCP client dengan payload `{ userId, conversationId, message }`.
@@ -314,10 +425,66 @@
   - 403 if the authenticated user is not the owner
 
 Notes: The service enforces ownership by checking `conversation.userId === user.id` before updating.
+=======
+  2. Jika tidak ada conversationId, server akan membuat `Conversation` baru untuk user (menggunakan `user.id` dari JWT).
+  3. Server menyimpan message role=`user` di DB.
+  4. Server memanggil MCP client dengan payload `{ userId, conversationId, message }`.
+  5. Setelah menerima jawaban, server menyimpan message role=`assistant`.
+
+- Success (200) contoh response (sederhana):
+```json
+{
+  "status_code": 200,
+  "conversationId": "cj_conv_123",
+  "user": { "id": "cj_user_1", "content": "Halo, tolong jelaskan..." },
+  "assistant": { "answer": "LLM reply (simulated) to: Halo, tolong jelaskan...", "createdAt": "2025-12-23T...", "status_code": 200 }
+}
+```
+
+- Errors: 400 jika `prompt` kosong, 401 jika token invalid, 403 jika user tidak berhak pada conversation.
+
+Notes: Response disederhanakan — tidak ada nested `raw` fields. Semua pesan tetap dipersist di tabel `Message`.
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 
 ---
 ---
 
+<<<<<<< HEAD
+=======
+### GET /chat/:conversationId
+- Deskripsi: Ambil riwayat pesan untuk `conversationId`. `userId` diambil dari JWT (hanya owner yang dapat mengakses).
+- Auth: Required
+- Headers: `Authorization: Bearer <TOKEN>`
+- Success (200) contoh response:
+```json
+{
+  "status_code": 200,
+  "conversationId": "cj_conv_123",
+  "userId": "cj_user_1",
+  "messages": [
+    { "role": "user", "content": "Halo", "createdAt": "..." },
+    { "role": "assistant", "content": "...", "createdAt": "..." }
+  ]
+}
+```
+
+---
+
+### GET /chat
+- Deskripsi: List conversations milik user (history). `userId` diambil dari JWT.
+- Auth: Required
+- Headers: `Authorization: Bearer <TOKEN>`
+- Success (200) contoh response:
+```json
+{
+  "status_code": 200,
+  "conversations": [ { "id": "cj_conv_123", "title": "Conversation", "createdAt": "..." }, ... ]
+}
+```
+
+---
+
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 ## 3) MCP Client (internal forwarding)
 
 ### POST /mcp-client/forward

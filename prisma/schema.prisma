@@ -13,7 +13,11 @@ model user {
   password  String
   name      String?
   rememberToken String? @unique
+<<<<<<< HEAD
   conversations conversation[]
+=======
+  conversations Conversation[]
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
   createdAt DateTime  @default(now())
 }
 

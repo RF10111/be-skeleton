@@ -34,8 +34,14 @@ let ChatService = class ChatService {
             conversationId,
             message: prompt,
         });
+<<<<<<< HEAD
         await this.addMessage(conversationId, 'assistant', mcpResponse.answer || '');
         return { user: userMsg, assistant: mcpResponse };
+=======
+        const assistantContent = mcpResponse?.answer ?? mcpResponse?.raw?.result?.content ?? mcpResponse?.raw?.data?.result?.content ?? '';
+        const assistantMsg = await this.addMessage(conversationId, 'assistant', assistantContent);
+        return { user: userMsg, assistant: assistantMsg };
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
     }
 };
 exports.ChatService = ChatService;

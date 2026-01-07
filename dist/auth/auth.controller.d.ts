@@ -7,9 +7,13 @@ export declare class AuthController {
     register(body: RegisterDto): Promise<any>;
     login(body: LoginDto): Promise<{
         access_token: string;
+        rememberToken: `${string}-${string}-${string}-${string}-${string}`;
     } | {
         status: string;
         message: string;
     }>;
     me(req: any): any;
+    logout(req: any): Promise<{
+        status: string;
+    }>;
 }

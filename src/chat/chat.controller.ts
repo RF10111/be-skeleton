@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Body,
   Controller,
@@ -11,6 +12,9 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
+=======
+import { Body, Controller, Post, UseGuards, Request, Param } from '@nestjs/common';
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
@@ -31,12 +35,15 @@ class PromptBodyDto {
   prompt: string;
 }
 
+<<<<<<< HEAD
 class TitleDto {
   @IsNotEmpty()
   @IsString()
   title: string;
 }
 
+=======
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 @Controller('chat')
 export class ChatController {
   constructor(private chatService: ChatService) {}
@@ -64,6 +71,7 @@ export class ChatController {
     const user = req.user;
     const result = await this.chatService.sendPrompt(user.id, conversationId, body.prompt);
     return { statusCode: 200, result };
+<<<<<<< HEAD
   }
 
   @UseGuards(JwtAuthGuard)
@@ -116,5 +124,7 @@ export class ChatController {
     }
 
     return { statusCode: 200, conversation: deleted };
+=======
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
   }
 }

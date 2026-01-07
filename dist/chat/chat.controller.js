@@ -29,6 +29,13 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], PromptDto.prototype, "prompt", void 0);
+class PromptBodyDto {
+}
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], PromptBodyDto.prototype, "prompt", void 0);
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
@@ -41,19 +48,41 @@ let ChatController = class ChatController {
             conversationId = conv.id;
         }
         const result = await this.chatService.sendPrompt(user.id, conversationId, body.prompt);
+<<<<<<< HEAD
         return { conversationId, result };
+=======
+        return { statusCode: 200, result };
+    }
+    async promptWithId(req, conversationId, body) {
+        const user = req.user;
+        const result = await this.chatService.sendPrompt(user.id, conversationId, body.prompt);
+        return { statusCode: 200, result };
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
     }
 };
 exports.ChatController = ChatController;
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Post)('/'),
+    (0, common_1.Post)(),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, PromptDto]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "prompt", null);
+<<<<<<< HEAD
+=======
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':conversationId'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('conversationId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, PromptBodyDto]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "promptWithId", null);
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 exports.ChatController = ChatController = __decorate([
     (0, common_1.Controller)('chat'),
     __metadata("design:paramtypes", [chat_service_1.ChatService])

@@ -28,11 +28,20 @@ export declare class ChatService {
             conversationId: string;
         };
         assistant: {
+<<<<<<< HEAD
             answer: any;
             raw: any;
         } | {
             answer: string;
             raw?: undefined;
+=======
+            id: string;
+            createdAt: Date;
+            role: string;
+            content: string;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+            conversationId: string;
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
         };
     }>;
 }

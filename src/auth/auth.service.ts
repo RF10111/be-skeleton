@@ -1,7 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+<<<<<<< HEAD
 import { PrismaService } from '../database/database.service';
+=======
+import { PrismaService } from '../prisma/prisma.service';
+>>>>>>> 61173fa8b054bd60235c7436396e55a20a026264
 import { randomUUID } from 'crypto';
 
 @Injectable()

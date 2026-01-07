@@ -28,7 +28,10 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
         if (!user)
-            return null;
+            throw new common_1.UnauthorizedException();
+        if (!payload.rt || user.rememberToken !== payload.rt) {
+            throw new common_1.UnauthorizedException('Token revoked or invalid');
+        }
         const { password, ...rest } = user;
         return rest;
     }
